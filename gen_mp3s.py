@@ -1,15 +1,12 @@
-from ttslearn.pretrained import create_tts_engine
-from tqdm.notebook import tqdm
-import torch
 from pydub import AudioSegment
 import re
 import soundfile as sf
-import torch
 import multiprocessing
 import os
 import string
 import argparse
 import sys
+import torch
 
 AUDIO_FOLDER = "audio"
 CWD = os.getcwd()
@@ -26,7 +23,7 @@ else:
 
 
 # TTS engine
-PWG_ENGINE = create_tts_engine("tacotron2_hifipwg_jsut24k", device=device)
+PWG_ENGINE = None
 
 # check if there are already audio files from a prior generation.
 # we do not want to regenerate files.
@@ -100,6 +97,11 @@ def generate(strings):
         process.join()
 
 def handle_generate(input_file_path):
+    from ttslearn.pretrained import create_tts_engine
+    from tqdm.notebook import tqdm
+    import torch
+    # set the engine
+    PWG_ENGINE = create_tts_engine("tacotron2_hifipwg_jsut24k", device=device)
     # generates audio files
     with open(input_file_path,"r") as f: text = f.readlines()
 
@@ -120,10 +122,27 @@ def handle_generate(input_file_path):
     generate(cleaned_strings)
 
 def handle_combine(file_name):
-    pass
+    files = [i for i in os.listdir(os.path.join(CWD,AUDIO_PATH)) if i.endswith(".mp3")]
+    files = sort_files(files)
+
+    combined_audio = AudioSegment.empty()
+    
+    # to do: 
+    # this should be parallelized.
+    # we can split the files by num cores and then go thru each 
+    # and then combine afterwards
+    for file_name in files:
+        file_path = os.path.join(AUDIO_PATH,file_name)
+        audio_segment = AudioSegment.from_mp3(file_path)
+        combined_audio += audio_segment
+    
+    combined_audio.export(file_name,format="mp3")
+    
 
 def is_existing_file(file_path):
     return os.path.isfile(file_path)
+def is_mp3_file(file_path):
+    return file_path.endswith('.mp3')
 def is_txt_file(file_path):
     return file_path.endswith('.txt')
 def is_existing_text_file(file_path):
@@ -133,7 +152,22 @@ def print_usage():
     print("usage (generate audio files): `python gen_mp3s.py -g [input txt file name]`")
     print("usage (combine audio files): `python gen_mp3s.py -c [output mp3 file name]`")
 
+def custom_sort(file_name):
+    """
+    Sorting for the sort method of file
+    """
+    parts = file_name.split("__")
+    int1 = int(parts[0])
+    # split based on file extension
+    int2 = int(parts[1].split(".")[0])
+    return (int1, int2)
+
+def sort_files(file_names):
+    return sorted(file_names,key=custom_sort)
+
 if __name__ == "__main__":
+
+    torch.multiprocessing.set_start_method("spawn")
 
     if len(sys.argv) != 3:
         print_usage()
@@ -157,7 +191,7 @@ if __name__ == "__main__":
             handle_generate(file_name)
     elif args.combine:
         file_name = sys.argv[2]
-        if not is_txt_file(file_name):
+        if not is_mp3_file(file_name):
             print(f'The file "{file_name}" is not a txt file.')
             exit(-1)
         else:
