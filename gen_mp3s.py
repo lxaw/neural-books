@@ -51,7 +51,9 @@ def is_bad_txt_string(text):
     """
     Check if txt_string is bad
     """
-    return all(char in string.punctuation for char in text)
+    bad_strings = ['「」','「','！','？','「！？」','「？」','「！」']
+
+    return all(char in string.punctuation for char in text) or (text in bad_strings)
 
 def process_partition(partition, index):
     """
