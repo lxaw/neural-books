@@ -72,6 +72,12 @@ def generate(strings):
 
     # Split the list into partitions
     partition_size = len(strings) // num_cores
+    # NOTE:
+    # if only one string, then could get partition size zero
+    # that would screw up the code, so need at least one
+    if partition_size == 0:
+        partition_size = 1
+
     partitions = [strings[i:i + partition_size] for i in range(0, len(strings), partition_size)]
 
     # Create a list to hold the process objects
