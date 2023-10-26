@@ -1,6 +1,6 @@
 # For making audiobooks from text.
 
-日本語は英語の後になります。母語でないため、多少のわかりにくいところがあるかもしれません。もしあれば、GitIssueを使って指摘してください。
+多少のわかりにくいところがあるかもしれません。もしあれば、GitIssueを使って指摘してください。
 
 ## NOTE: Only for Japanese.
 Unfortunately, I have only tested this for Japanese. As there are a plethora of language voice models out there, I am sure you can find what you are looking for. As such, this is mainly for a Japanese audience, or those who are learning Japanese.

@@ -15,8 +15,11 @@ if [ ! -f "$txt_file" ]; then
     exit 1
 fi
 
-# Count the total number of lines in the text file
-total_lines=$(wc -l < "$txt_file")
+# Define the character to split lines on
+split_char='。'
+
+# Split lines on the specified character and remove empty items
+total_items=$(awk -v RS='\n' -F"$split_char" '{ for (i=1; i<=NF; i++) if ($i != "") items++; } END { print items }' "$txt_file")
 
 # Define the path to the directory
 audio_directory="audio"
@@ -24,10 +27,11 @@ audio_directory="audio"
 # Count the number of files in the "audio" directory
 num_files=$(find "$audio_directory" -type f | wc -l)
 
-# Calculate the percentage
-percentage=$(bc  <<< "scale=3; $num_files / $total_lines * 100")
+# Calculate the percentage rounded to the nearest decimal place
+percentage=$(bc -l <<< "$num_files / $total_items * 100")
 
 # Print the results
-echo "Total lines in $txt_file: $total_lines"
+echo "Total items in the list: $total_items"
 echo "Number of files in $audio_directory: $num_files"
 echo "Percentage: $percentage%"
+
